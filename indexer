@@ -1,0 +1,94 @@
+#!/bin/bash
+
+if [[ ! "$#" -eq 1 ]]; then 
+  exit 0
+fi
+
+if [[ ! -d "$1" ]]; then
+  exit 0
+fi
+
+dirname="$1"
+home=$PWD
+makeindex() {
+  while IFS= read -r locdir; do
+    
+    wayback=$(python3 -c 'import os, sys; print(os.path.relpath(sys.argv[2], sys.argv[1]))' "$locdir" "$home")
+
+    cd "$locdir"
+    
+    local blacklist=()
+    local special=()
+    local specialf=()
+    local speciald=()
+    local allfiles=()
+    local alldirs=()
+    if [[ -e "_blacklist" ]]; then   
+      while IFS= read -r name ; do
+        blacklist+="$name"
+      done <"_blacklist"
+    fi
+    if [[ -e "_special" ]]; then
+      while IFS= read -r name; do
+        special+="$name"
+      done <"_special"
+    fi
+
+    while IFS= read -r -d '' file; do
+      if [[ "${blacklist[*]}" =~ "${file:2}" || "$file" == "./_blacklist" || "$file" == "./_special" ]]; then 
+        continue
+      fi
+      if [[ "${special[*]}" =~ "${file:2}" ]]; then
+        specialf[${#specialf[*]}]="$file"
+        continue
+      fi
+      allfiles["${#allfiles[@]}"]="$file"
+    done < <(find . -type f -maxdepth 1 -print0)
+
+    while IFS= read -r -d '' dir; do
+      if [[ "${blacklist[*]}" =~ "${dir:2}" ]]; then
+        continue
+      fi
+      if [[ "${special[*]}" =~ "${dir:2}" ]]; then
+        speciald[${#speciald[*]}]="$dir"
+        continue
+      fi
+      alldirs["${#alldirs[@]}"]="$dir"
+    done < <(find . -type d -maxdepth 1 -print0)
+
+
+    for i in "${!allfiles[@]}"; do
+      allfiles[$i]="\"${allfiles[$i]:2}\""
+    done
+    
+    for i in "${!alldirs[@]}"; do
+      alldirs[$i]="\"${alldirs[$i]:2}\""
+    done
+
+    for i in "${!speciald[@]}"; do
+      speciald[$i]="\"${speciald[$i]:2}\""
+    done
+
+    for i in "${!specialf[@]}"; do
+      specialf[$i]="\"${specialf[$i]:2}\""
+    done
+
+
+
+    IFS=","
+    echo "\"files\":[${allfiles[*]}]" > index.json
+    echo "\"directories\":[${alldirs[*]}]" >> index.json
+    echo "\"special_files\":[${specialf[*]}]" >> index.json
+    echo "\"special_directories\":[${speciald[*]}]" >> index.json
+    echo "\"outer\":\"$wayback\"" >> index.json
+    unset IFS
+
+
+    cd "$home"
+    
+  done
+}
+
+find "$dirname" -type d -exec echo "{}" \;| makeindex 
+
+
