@@ -1,2 +1,5 @@
 Grades.c: Takes a file path input, and reads the database file for things listed in the format '10 digit id:name of assignment:grade'. It then creates a linked list with all entries in the database as individual nodes. It will then continually read from stdin for certain commands to read commands to add an assignment with a grade to the end of the list, to print the list, to remove a certain entry, and to print the statistics for a certain assignment. It then will update the original database file with the new full linked list.
+\n
 Indexer: A program which, in the current working directory, and recursively in every present directory, will catalog every file and directory into an index file which contains the name of every file, except those listed in a file called '_blacklist' and with a separate category for those named in '_special'.
+\n
+newsheet.py: A program which helps in the creation of a DND character, by listing the abilities granted by class features and the like- mostly just to help me in making sure I don't forget class features when I stat out a new character
